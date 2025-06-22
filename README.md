@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ดาวน์โหลดวิดีโอ Facebook.</title>
+  <title>ดาวน์โหลดวิดีโอ Facebook 4k 1080P 720P </title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -110,7 +110,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>ดาวน์โหลดวิดีโอ Facebook.4k.1080P.720P.</h1>
+    <h1>ดาวน์โหลดวิดีโอ Faceboo 4k 1080P 720P </h1>
     <input type="text" id="videoURL" placeholder="วางลิงก์วิดีโอ Facebook ที่นี่">
     <br>
     <button onclick="simulateDownload()">ดึงวิดีโอ</button>
