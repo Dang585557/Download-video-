@@ -3,27 +3,140 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ดาวน์โหลดวิดีโอ Facebook</title>
+  <title>ดาวน์โหลดวิดีโอ Facebook 4K 1080P 720P</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #00b4d8, #90e0ef);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #023e8a;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 20px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 26px;
+      color: #0077b6;
+    }
+
+    input[type="text"] {
+      padding: 12px;
+      width: 80%;
+      border: 2px solid #00b4d8;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #0077b6;
+      color: white;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #023e8a;
+    }
+
+    .download-btn {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: #0096c7;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    .download-btn:hover {
+      background-color: #0077b6;
+    }
+
+    .ads {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #caf0f8;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+
+    .error {
+      color: red;
+      margin-top: 15px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Facebook Video Downloader</h1>
-  <input type="text" id="url" placeholder="วางลิงก์ Facebook ที่นี่"/>
-  <button onclick="download()">ดึงวิดีโอ</button>
-  <div id="result"></div>
+  <div class="container">
+    <h1>ดาวน์โหลดวิดีโอ Facebook</h1>
+    <input type="text" id="videoURL" placeholder="วางลิงก์วิดีโอ Facebook ที่นี่" />
+    <br />
+    <button onclick="fetchVideo()">ดึงวิดีโอ</button>
+    <div id="result"></div>
+    <div class="ads">
+      📢 พื้นที่โฆษณาของคุณ
+    </div>
+  </div>
 
   <script>
-    async function download() {
-      const url = document.getElementById('url').value;
-      const res = await fetch(`/api/download?url=${encodeURIComponent(url)}`);
-      const data = await res.json();
+    async function fetchVideo() {
+      const url = document.getElementById('videoURL').value.trim();
+      const result = document.getElementById('result');
+      result.innerHTML = '';
 
-      const container = document.getElementById('result');
-      if (data.error) {
-        container.innerHTML = `<p style="color:red">${data.error}</p>`;
-      } else {
-        container.innerHTML = data.formats.map(f => 
-          `<a href="${f.url}" target="_blank">${f.quality}</a><br>`
-        ).join('');
+      if (!url) {
+        result.innerHTML = '<div class="error">กรุณาวางลิงก์วิดีโอก่อน</div>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+
+        if (data.error) {
+          result.innerHTML = '<div class="error">' + data.error + '</div>';
+          return;
+        }
+
+        result.innerHTML = '<h3>เลือกระดับความคมชัด:</h3>';
+        data.formats.forEach(format => {
+          if (format.height) {
+            result.innerHTML += `
+              <a class="download-btn" href="${format.url}" target="_blank">
+                ดาวน์โหลด ${format.format_note}
+              </a>
+            `;
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        result.innerHTML = '<div class="error">ไม่สามารถดึงวิดีโอได้</div>';
       }
     }
   </script>
