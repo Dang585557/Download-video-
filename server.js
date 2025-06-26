@@ -1,35 +1,41 @@
+// server.js
 import express from 'express';
-import ytdlp from 'yt-dlp-exec';
+import cors from 'cors';
+import { exec } from 'child_process';
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.get('/api/getVideo', async (req, res) => {
-  const videoURL = req.query.url;
-  if (!videoURL || !videoURL.startsWith('http')) {
-    return res.status(400).json({ error: 'URL ไม่ถูกต้อง' });
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/fb', async (req, res) => {
+  const videoUrl = req.query.url;
+  if (!videoUrl) {
+    return res.status(400).json({ error: 'Missing URL' });
   }
 
-  try {
-    const output = await ytdlp(videoURL, {
-      dumpSingleJson: true,
-      noWarnings: true,
-      noCallHome: true,
-    });
+  exec(`yt-dlp -J "${videoUrl}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error('yt-dlp error:', stderr);
+      return res.status(500).json({ error: 'ไม่สามารถดึงวิดีโอได้' });
+    }
 
-    const formats = output.formats
-      .filter(f => f.ext === 'mp4' && f.url)
-      .map(f => ({
-        url: f.url,
-        height: f.height,
-        format_note: f.format_note
-      }));
-
-    res.json({ formats });
-  } catch (err) {
-    res.status(500).json({ error: 'ไม่สามารถดึงวิดีโอได้' });
-  }
+    try {
+      const data = JSON.parse(stdout);
+      const formats = data.formats
+        .filter(f => f.ext === 'mp4' && f.url)
+        .map(f => ({
+          quality: f.format_note || `${f.height}p`,
+          url: f.url
+        }));
+      res.json({ title: data.title, formats });
+    } catch (e) {
+      res.status(500).json({ error: 'วิดีโอไม่ถูกต้องหรือแปลงข้อมูลไม่ได้' });
+    }
+  });
 });
 
-app.listen(3000, () => {
-  console.log('Server started on http://localhost:3000');
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
