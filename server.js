@@ -9,41 +9,39 @@ import fs from 'fs';
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Fix __dirname in ES Module
+// Fix __dirname for ES Module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// middleware
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// โหลดวิดีโอจาก Facebook
+// Endpoint ดาวน์โหลดวิดีโอ Facebook
 app.get('/api/facebook', (req, res) => {
   const videoURL = req.query.url;
-  if (!videoURL) {
-    return res.status(400).json({ error: 'ไม่พบลิงก์วิดีโอ' });
+  if (!videoURL || !videoURL.startsWith('http')) {
+    return res.status(400).json({ error: 'ลิงก์ไม่ถูกต้อง' });
   }
 
-  const outputFile = path.join(__dirname, 'video.mp4');
+  const filename = `facebook_video_${Date.now()}.mp4`;
+  const outputFile = path.join(__dirname, filename);
   const command = `yt-dlp -f best -o "${outputFile}" "${videoURL}"`;
 
   exec(command, (error, stdout, stderr) => {
     if (error) {
-      console.error('เกิดข้อผิดพลาดในการดาวน์โหลด:', stderr);
+      console.error('เกิดข้อผิดพลาด:', stderr);
       return res.status(500).json({ error: 'ไม่สามารถดาวน์โหลดวิดีโอได้' });
     }
 
-    // ส่งวิดีโอกลับไปให้ดาวน์โหลด
+    // ส่งไฟล์วิดีโอกลับไปให้ดาวน์โหลด
     res.download(outputFile, 'facebook-video.mp4', (err) => {
-      if (err) {
-        console.error('ส่งไฟล์ไม่สำเร็จ:', err);
-      }
-      fs.unlink(outputFile, () => {}); // ลบไฟล์หลังจากส่งแล้ว
+      fs.unlink(outputFile, () => {}); // ลบไฟล์หลังส่งเสร็จ
+      if (err) console.error('ส่งไฟล์ไม่สำเร็จ:', err);
     });
   });
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Facebook video downloader server running at http://localhost:${port}`);
 });
