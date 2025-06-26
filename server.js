@@ -1,5 +1,7 @@
-// server.js
+import express from 'express';
 import ytdlp from 'yt-dlp-exec';
+
+const app = express();
 
 app.get('/api/getVideo', async (req, res) => {
   const videoURL = req.query.url;
@@ -26,4 +28,8 @@ app.get('/api/getVideo', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'ไม่สามารถดึงวิดีโอได้' });
   }
+});
+
+app.listen(3000, () => {
+  console.log('Server started on http://localhost:3000');
 });
