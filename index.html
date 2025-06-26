@@ -66,33 +66,33 @@
     <div class="result" id="result"></div>
   </div>
 
-  <script>
-    async function getVideo() {
-      const url = document.getElementById('url').value.trim();
-      const result = document.getElementById('result');
-      result.innerHTML = '⏳ กำลังโหลด...';
-
-      try {
-        const res = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
-        const data = await res.json();
-
-        if (data.error) {
-          result.innerHTML = `<p style="color:red;">❌ ${data.error}</p>`;
-        } else {
-          result.innerHTML = '<h3>เลือกระดับความคมชัด:</h3>';
-          data.formats.forEach(format => {
-            const a = document.createElement('a');
-            a.href = format.url;
-            a.target = '_blank';
-            a.innerText = `${format.format_note || format.height + 'p'} (${format.ext})`;
-            result.appendChild(a);
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        result.innerHTML = `<p style="color:red;">⚠️ ไม่สามารถดึงวิดีโอได้</p>`;
-      }
+<script>
+  async function simulateDownload() {
+    const url = document.getElementById('videoURL').value.trim();
+    const result = document.getElementById('result');
+    if (!url) {
+      result.innerHTML = '<p style="color:red;">กรุณาวางลิงก์ก่อน</p>';
+      return;
     }
-  </script>
-</body>
-</html>
+
+    result.innerHTML = '<p>กำลังโหลด...</p>';
+
+    try {
+      const res = await fetch(`https://your-backend-url.com/api/fb?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (data.error) {
+        result.innerHTML = `<p style="color:red;">${data.error}</p>`;
+        return;
+      }
+
+      result.innerHTML = `<h3>${data.title}</h3><h4>เลือกระดับความคมชัด:</h4>`;
+      data.formats.forEach(format => {
+        result.innerHTML += `
+          <a class="download-btn" href="#" onclick="showAd('${format.url}')">${format.quality}</a>
+        `;
+      });
+    } catch (err) {
+      result.innerHTML = '<p style="color:red;">เกิดข้อผิดพลาด</p>';
+    }
+  }
+</script>
