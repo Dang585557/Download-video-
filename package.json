@@ -1,19 +1,12 @@
 {
-  "name": "facebook-video-downloader",
+  "name": "facebook-downloader",
   "version": "1.0.0",
-  "description": "A simple Facebook video downloader using Express and yt-dlp-exec",
-  "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "yt-dlp-exec": "^1.0.0"
-  },
-  "license": "MIT",
-  "engines": {
-    "node": ">=16"
+    "express": "^4.18.2"
   }
 }
