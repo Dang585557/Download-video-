@@ -1,43 +1,34 @@
-// File: api/getVideo.js
+// api/getVideo.js (เฉพาะ Facebook)
 import { exec } from 'child_process';
-import path from 'path';
-import fs from 'fs';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export default async function handler(req, res) {
   const { url } = req.query;
 
   if (!url || !url.includes('facebook.com')) {
-    return res.status(400).json({ error: 'กรุณาใส่ลิงก์ Facebook ให้ถูกต้อง' });
+    return res.status(400).json({ error: 'URL ไม่ถูกต้อง หรือไม่ใช่ลิงก์ Facebook' });
   }
 
-  const outputPath = path.resolve('/tmp', `fbvideo_${Date.now()}.json`);
-  const command = `yt-dlp -j --no-warnings "${url}" > "${outputPath}"`;
+  try {
+    const command = `yt-dlp -j "${url}"`;
+    const { stdout } = await execAsync(command, { timeout: 20000 });
 
-  exec(command, (error) => {
-    if (error) {
-      console.error('เกิดข้อผิดพลาด:', error);
-      return res.status(500).json({ error: 'ไม่สามารถดึงวิดีโอได้' });
-    }
+    const json = JSON.parse(stdout);
 
-    fs.readFile(outputPath, 'utf8', (err, data) => {
-      if (err) {
-        return res.status(500).json({ error: 'ไม่สามารถอ่านข้อมูลวิดีโอ' });
-      }
+    const formats = json.formats
+      .filter(f => f.url && f.format_note)
+      .map(f => ({
+        url: f.url,
+        quality: f.format_note,
+        ext: f.ext,
+        height: f.height
+      }));
 
-      try {
-        const info = JSON.parse(data);
-        const formats = info.formats
-          .filter(f => f.ext === 'mp4' && f.url)
-          .map(f => ({
-            url: f.url,
-            ext: f.ext,
-            height: f.height,
-            format_note: f.format_note || f.quality_label || '',
-          }));
-        res.status(200).json({ formats });
-      } catch (parseErr) {
-        return res.status(500).json({ error: 'แปลงข้อมูลไม่สำเร็จ' });
-      }
-    });
-  });
+    res.status(200).json({ formats });
+  } catch (err) {
+    console.error('เกิดข้อผิดพลาด:', err.message);
+    res.status(500).json({ error: 'ไม่สามารถดึงวิดีโอได้' });
+  }
 }
