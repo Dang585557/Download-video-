@@ -1,46 +1,37 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="theme-color" content="#00bfff" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ดาวน์โหลดวิดีโอ Facebook</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <h1>ดาวน์โหลดวิดีโอ Facebook</h1>
-    <input type="text" id="urlInput" placeholder="วางลิงก์ Facebook ที่นี่" />
-    
-    <!-- โฆษณาอยู่ข้างบนปุ่ม -->
-    <div class="ad" style="margin: 10px 0;">
-      <button onclick="alert('✨ พื้นที่โฆษณาของคุณ ✨')" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 8px;">พื้นที่โฆษณาของคุณ ✨</button>
-    </div>
-
+    <input id="url" type="text" placeholder="ใส่ลิงก์ Facebook ที่นี่">
     <button onclick="fetchVideo()">ดึงวิดีโอ</button>
-    <div id="result"></div>
+    <div id="ad-section">
+      <p>🎯 โฆษณาของคุณอยู่ที่นี่ 🎯</p>
+    </div>
+    <div id="results"></div>
   </div>
 
   <script>
     async function fetchVideo() {
-      const url = document.getElementById("urlInput").value;
-      const resultBox = document.getElementById("result");
-      resultBox.innerHTML = "⏳ กำลังดึงวิดีโอ...";
-      try {
-        const res = await fetch(`https://your-backend-server.onrender.com/api/getVideo?url=${encodeURIComponent(url)}`);
-        const data = await res.json();
-        if (data.error) {
-          resultBox.innerHTML = `❌ เกิดข้อผิดพลาด: ${data.error}`;
-        } else {
-          resultBox.innerHTML = data.formats.map(f => `
-            <div style="margin-top: 10px;">
-              <a href="${f.url}" target="_blank" style="color: blue;">ดาวน์โหลดคุณภาพ ${f.format_note || f.height + 'p'}</a>
-            </div>
-          `).join('');
-        }
-      } catch (err) {
-        resultBox.innerHTML = `❌ เกิดข้อผิดพลาด: ${err.message}`;
+      const url = document.getElementById("url").value;
+      const res = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById("results").innerHTML = `<p style="color:red;">เกิดข้อผิดพลาด: ${data.error}</p>`;
+      } else {
+        let html = '<h3>เลือกรูปแบบความละเอียด:</h3><ul>';
+        data.formats.forEach(v => {
+          html += `<li><a href="${v.url}" target="_blank">${v.format_note} (${v.ext})</a></li>`;
+        });
+        html += '</ul>';
+        document.getElementById("results").innerHTML = html;
       }
     }
   </script>
