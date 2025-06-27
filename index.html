@@ -1,98 +1,113 @@
 <!DOCTYPE html>
-<html lang="th">
-<head>
+  <html lang="th"><head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ดาวน์โหลดวิดีโอ Facebook</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ดาวน์โหลดวิดีโอ Facebook TikTok Instagram</title>
+  <link rel="manifest" href="/manifest.json" />
   <style>
     body {
-      background: linear-gradient(120deg, #00b4d8, #90e0ef);
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #00b4d8, #90e0ef);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
-      color: #03045e;
-    }
-    .container {
-      background: #ffffffcc;
-      backdrop-filter: blur(10px);
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      max-width: 500px;
-      width: 90%;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    input[type="text"] {
-      padding: 10px;
-      width: 80%;
-      border-radius: 8px;
-      border: 1px solid #0077b6;
-      margin-bottom: 20px;
-    }
-    button {
-      padding: 10px 20px;
-      background-color: #0077b6;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #023e8a;
-    }
-    .result a {
-      display: block;
-      margin: 10px 0;
-      background-color: #00b4d8;
-      color: white;
-      padding: 10px;
-      border-radius: 8px;
-      text-decoration: none;
-    }
+      color: #0077b6;
+    }.container {
+  background: rgba(255, 255, 255, 0.85);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+input[type="text"] {
+  padding: 10px;
+  width: 80%;
+  border: 1px solid #0077b6;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #0077b6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #023e8a;
+}
+
+.download-link {
+  display: block;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #0096c7;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.ads {
+  margin-top: 20px;
+  background-color: #caf0f8;
+  padding: 15px;
+  border-radius: 12px;
+}
+
   </style>
-</head>
-<body>
+</head><body>
   <div class="container">
-    <h1>ดาวน์โหลดวิดีโอ Facebook</h1>
-    <input type="text" id="url" placeholder="วางลิงก์วิดีโอ Facebook ที่นี่" />
-    <br/>
-    <button onclick="getVideo()">ดึงวิดีโอ</button>
-    <div class="result" id="result"></div>
-  </div>
+    <h1>ดาวน์โหลดวิดีโอ Facebook / TikTok / Instagram</h1>
+    <input type="text" id="videoUrl" placeholder="วางลิงก์วิดีโอที่นี่..." />
+    <br />
+    <button onclick="fetchVideo()">ดึงลิงก์ดาวน์โหลด</button>
+    <div id="result"></div>
+    <div class="ads">
+      <strong>โฆษณา:</strong> พื้นที่โฆษณาของคุณอยู่ตรงนี้ 🎯
+    </div>
+  </div>  <script>
+    async function fetchVideo() {
+      const url = document.getElementById("videoUrl").value.trim();
+      if (!url) return alert("กรุณาใส่ลิงก์ก่อน");
+      const result = document.getElementById("result");
+      result.innerHTML = "กำลังโหลด...";
 
-<script>
-  async function simulateDownload() {
-    const url = document.getElementById('videoURL').value.trim();
-    const result = document.getElementById('result');
-    if (!url) {
-      result.innerHTML = '<p style="color:red;">กรุณาวางลิงก์ก่อน</p>';
-      return;
-    }
+      try {
+        const response = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
 
-    result.innerHTML = '<p>กำลังโหลด...</p>';
+        if (!data.formats || !Array.isArray(data.formats)) {
+          result.innerHTML = `<p style='color:red;'>ไม่สามารถดึงวิดีโอได้</p>`;
+          return;
+        }
 
-    try {
-      const res = await fetch(`https://your-backend-url.com/api/fb?url=${encodeURIComponent(url)}`);
-      const data = await res.json();
-      if (data.error) {
-        result.innerHTML = `<p style="color:red;">${data.error}</p>`;
-        return;
+        result.innerHTML = '<h3>เลือกระดับความคมชัด:</h3>';
+        data.formats.forEach(format => {
+          result.innerHTML += `<a class="download-link" href="${format.url}" target="_blank">${format.format_note || format.height + 'p'}</a>`;
+        });
+      } catch (err) {
+        console.error(err);
+        result.innerHTML = `<p style='color:red;'>เกิดข้อผิดพลาด: ${err.message}</p>`;
       }
-
-      result.innerHTML = `<h3>${data.title}</h3><h4>เลือกระดับความคมชัด:</h4>`;
-      data.formats.forEach(format => {
-        result.innerHTML += `
-          <a class="download-btn" href="#" onclick="showAd('${format.url}')">${format.quality}</a>
-        `;
-      });
-    } catch (err) {
-      result.innerHTML = '<p style="color:red;">เกิดข้อผิดพลาด</p>';
     }
-  }
-</script>
+  </script>  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('Service Worker ลงทะเบียนแล้ว'))
+        .catch(err => console.log('Service Worker ผิดพลาด:', err));
+    }
+  </script></body></html>
