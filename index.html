@@ -2,113 +2,46 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ดาวน์โหลดวิดีโอ Facebook 4K 1080P 720P</title>
-
-  <!-- PWA -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#00bfff" />
+  <title>ดาวน์โหลดวิดีโอ Facebook</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" />
-  <meta name="theme-color" content="#00b4d8" />
-
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <h1>ดาวน์โหลดวิดีโอ Facebook</h1>
-    <input type="text" id="videoURL" placeholder="วางลิงก์ Facebook ที่นี่" />
+    <input type="text" id="urlInput" placeholder="วางลิงก์ Facebook ที่นี่" />
+    
+    <!-- โฆษณาอยู่ข้างบนปุ่ม -->
+    <div class="ad" style="margin: 10px 0;">
+      <button onclick="alert('✨ พื้นที่โฆษณาของคุณ ✨')" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 8px;">พื้นที่โฆษณาของคุณ ✨</button>
+    </div>
+
     <button onclick="fetchVideo()">ดึงวิดีโอ</button>
     <div id="result"></div>
-
-    <div class="ads">พื้นที่โฆษณาของคุณ ✨</div>
   </div>
 
-  <!-- โฆษณาวิดีโอ -->
-  <div class="video-ad-overlay" id="videoAd">
-    <video id="adVideo" controls autoplay>
-      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
-      วิดีโอไม่สามารถเล่นได้
-    </video>
-    <button class="close-ad-btn" id="closeAdBtn" onclick="closeAd()" disabled>ข้ามโฆษณา (5)</button>
-  </div>
-
-  <!-- JS -->
   <script>
-    let selectedDownloadLink = "";
-    let countdown = 5;
-    let countdownInterval;
-
     async function fetchVideo() {
-      const url = document.getElementById("videoURL").value.trim();
-      const result = document.getElementById("result");
-      if (!url) {
-        result.innerHTML = "<p style='color:red;'>กรุณาวางลิงก์ก่อน</p>";
-        return;
-      }
-
-      result.innerHTML = "<p>กำลังดึงข้อมูลวิดีโอ...</p>";
-
+      const url = document.getElementById("urlInput").value;
+      const resultBox = document.getElementById("result");
+      resultBox.innerHTML = "⏳ กำลังดึงวิดีโอ...";
       try {
-        const res = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
+        const res = await fetch(`https://your-backend-server.onrender.com/api/getVideo?url=${encodeURIComponent(url)}`);
         const data = await res.json();
-
-        if (!data.formats || data.formats.length === 0) {
-          result.innerHTML = "<p style='color:red;'>ไม่พบวิดีโอ</p>";
-          return;
-        }
-
-        result.innerHTML = "<h3>เลือกระดับความคมชัด:</h3>";
-        data.formats.forEach(format => {
-          const btn = document.createElement("a");
-          btn.href = "#";
-          btn.innerText = format.format_note || format.height + "p";
-          btn.className = "download-btn";
-          btn.onclick = () => showAd(format.url);
-          result.appendChild(btn);
-        });
-      } catch (err) {
-        console.error(err);
-        result.innerHTML = "<p style='color:red;'>เกิดข้อผิดพลาด: " + err.message + "</p>";
-      }
-    }
-
-    function showAd(downloadLink) {
-      selectedDownloadLink = downloadLink;
-      document.getElementById("videoAd").style.display = "flex";
-      document.getElementById("adVideo").currentTime = 0;
-      document.getElementById("adVideo").play();
-
-      countdown = 5;
-      const closeAdBtn = document.getElementById("closeAdBtn");
-      closeAdBtn.innerText = `ข้ามโฆษณา (${countdown})`;
-      closeAdBtn.disabled = true;
-      closeAdBtn.classList.remove("enabled");
-
-      countdownInterval = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
-          closeAdBtn.innerText = `ข้ามโฆษณา (${countdown})`;
+        if (data.error) {
+          resultBox.innerHTML = `❌ เกิดข้อผิดพลาด: ${data.error}`;
         } else {
-          clearInterval(countdownInterval);
-          closeAdBtn.innerText = "ข้ามโฆษณา";
-          closeAdBtn.disabled = false;
-          closeAdBtn.classList.add("enabled");
+          resultBox.innerHTML = data.formats.map(f => `
+            <div style="margin-top: 10px;">
+              <a href="${f.url}" target="_blank" style="color: blue;">ดาวน์โหลดคุณภาพ ${f.format_note || f.height + 'p'}</a>
+            </div>
+          `).join('');
         }
-      }, 1000);
-    }
-
-    function closeAd() {
-      const closeAdBtn = document.getElementById("closeAdBtn");
-      if (closeAdBtn.disabled) return;
-      document.getElementById("videoAd").style.display = "none";
-      window.open(selectedDownloadLink, "_blank");
-    }
-
-    // Service Worker
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(reg => console.log("SW registered", reg))
-        .catch(err => console.error("SW registration failed", err));
+      } catch (err) {
+        resultBox.innerHTML = `❌ เกิดข้อผิดพลาด: ${err.message}`;
+      }
     }
   </script>
 </body>
