@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.get('/api/fb', async (req, res) => {
+app.get('/api/getVideo', async (req, res) => { ... }) 
   const videoUrl = req.query.url;
   if (!videoUrl) {
     return res.status(400).json({ error: 'Missing URL' });
