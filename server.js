@@ -1,32 +1,44 @@
-// ✅ server.js (ฝั่ง Backend Node.js จริง)
+import express from 'express';
+import cors from 'cors';
+import { exec } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-import express from 'express'; import cors from 'cors'; import { exec } from 'child_process';
-
-const app = express(); const PORT = process.env.PORT || 3000;
+const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ API ดาวน์โหลดวิดีโอ Facebook จริง app.get('/api/getVideo', async (req, res) => { const videoURL = req.query.url;
+app.get('/api/getVideo', async (req, res) => {
+  const videoURL = req.query.url;
+  if (!videoURL) return res.status(400).json({ error: "กรุณาใส่ลิงก์วิดีโอ" });
 
-if (!videoURL || !videoURL.includes('facebook.com')) { return res.status(400).json({ error: 'ลิงก์ไม่ถูกต้อง ต้องเป็นลิงก์ Facebook เท่านั้น' }); }
+  const cmd = `yt-dlp -F "${videoURL}" --print-json`;
 
-const cmd = yt-dlp -J "${videoURL}"; exec(cmd, (error, stdout, stderr) => { if (error) { console.error('เกิดข้อผิดพลาด:', stderr); return res.status(500).json({ error: 'ไม่สามารถดึงวิดีโอได้' }); }
+  exec(cmd, (err, stdout, stderr) => {
+    if (err) {
+      console.error(stderr);
+      return res.status(500).json({ error: "ไม่สามารถดึงข้อมูลวิดีโอได้" });
+    }
 
-try {
-  const json = JSON.parse(stdout);
-  const formats = json.formats
-    .filter(f => f.ext === 'mp4' && f.url)
-    .map(f => ({
-      quality: f.format_note || f.height + 'p',
-      url: f.url
-    }));
+    try {
+      const jsonOutput = JSON.parse(stdout);
+      const formats = jsonOutput.formats
+        .filter(f => f.ext === 'mp4' && f.format_note)
+        .map(f => ({
+          url: f.url,
+          ext: f.ext,
+          format_note: f.format_note,
+          height: f.height
+        }));
 
-  res.json({ title: json.title, thumbnail: json.thumbnail, formats });
-} catch (parseError) {
-  return res.status(500).json({ error: 'แปลงข้อมูลวิดีโอล้มเหลว' });
-}
+      res.json({ formats });
+    } catch (e) {
+      return res.status(500).json({ error: "ไม่สามารถแปลงข้อมูลวิดีโอได้" });
+    }
+  });
+});
 
-}); });
-
-// ✅ Start Server app.listen(PORT, () => { console.log(Server is running on port ${PORT}); });
-
+app.listen(PORT, () => console.log(`✅ Server started on http://localhost:${PORT}`));
