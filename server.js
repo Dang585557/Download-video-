@@ -15,7 +15,7 @@ app.get('/api/getVideo', async (req, res) => {
   const videoURL = req.query.url;
   if (!videoURL) return res.status(400).json({ error: "กรุณาใส่ลิงก์วิดีโอ" });
 
-  const cmd = `yt-dlp -F "${videoURL}" --print-json`;
+  const cmd = `sudo apt install yt-dlp-F "${videoURL}" --print-json`;
 
   exec(cmd, (err, stdout, stderr) => {
     if (err) {
