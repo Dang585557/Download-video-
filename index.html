@@ -68,46 +68,70 @@ button:hover {
   border-radius: 12px;
 }
 
+  <!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ดาวน์โหลดวิดีโอ Facebook</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f8ff;
+      text-align: center;
+      padding: 40px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+      width: 80%;
+      max-width: 500px;
+    }
+    .link-container {
+      margin-top: 20px;
+    }
+    a {
+      display: block;
+      margin: 10px 0;
+      color: #0066cc;
+    }
   </style>
-</head><body>
-  <div class="container">
-    <h1>ดาวน์โหลดวิดีโอ Facebook / TikTok / Instagram</h1>
-    <input type="text" id="videoUrl" placeholder="วางลิงก์วิดีโอที่นี่..." />
-    <br />
-    <button onclick="fetchVideo()">ดึงลิงก์ดาวน์โหลด</button>
-    <div id="result"></div>
-    <div class="ads">
-      <strong>โฆษณา:</strong> พื้นที่โฆษณาของคุณอยู่ตรงนี้ 🎯
-    </div>
-  </div>  <script>
+</head>
+<body>
+  <h1>🎥 ดาวน์โหลดวิดีโอ Facebook</h1>
+  <input type="text" id="videoUrl" placeholder="วางลิงก์วิดีโอ Facebook ที่นี่..." />
+  <br>
+  <button onclick="fetchVideo()">🔍 ดึงลิงก์ดาวน์โหลด</button>
+
+  <div class="link-container" id="result"></div>
+
+  <script>
     async function fetchVideo() {
       const url = document.getElementById("videoUrl").value.trim();
-      if (!url) return alert("กรุณาใส่ลิงก์ก่อน");
-      const result = document.getElementById("result");
-      result.innerHTML = "กำลังโหลด...";
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "⏳ กำลังดึงลิงก์...";
 
       try {
-        const response = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
-        const data = await response.json();
+        const response = await fetch(`https://cors-anywhere.herokuapp.com/${url}`);
+        const html = await response.text();
 
-        if (!data.formats || !Array.isArray(data.formats)) {
-          result.innerHTML = `<p style='color:red;'>ไม่สามารถดึงวิดีโอได้</p>`;
-          return;
-        }
+        const hdMatch = html.match(/"playable_url_quality_hd":"([^"]+)"/);
+        const sdMatch = html.match(/"playable_url":"([^"]+)"/);
 
-        result.innerHTML = '<h3>เลือกระดับความคมชัด:</h3>';
-        data.formats.forEach(format => {
-          result.innerHTML += `<a class="download-link" href="${format.url}" target="_blank">${format.format_note || format.height + 'p'}</a>`;
-        });
-      } catch (err) {
-        console.error(err);
-        result.innerHTML = `<p style='color:red;'>เกิดข้อผิดพลาด: ${err.message}</p>`;
+        const hdUrl = hdMatch ? decodeURIComponent(hdMatch[1].replace(/\\u0025/g, '%').replace(/\\/g, '')) : null;
+        const sdUrl = sdMatch ? decodeURIComponent(sdMatch[1].replace(/\\u0025/g, '%').replace(/\\/g, '')) : null;
+
+        let output = "";
+        if (hdUrl) output += `<a href="${hdUrl}" target="_blank">📥 ดาวน์โหลดแบบ HD</a>`;
+        if (sdUrl) output += `<a href="${sdUrl}" target="_blank">📥 ดาวน์โหลดแบบ SD</a>`;
+        if (!hdUrl && !sdUrl) output = "❌ ไม่พบลิงก์วิดีโอ อาจเป็นวิดีโอส่วนตัวหรือระบบเปลี่ยนโครงสร้าง";
+
+        resultDiv.innerHTML = output;
+      } catch (e) {
+        resultDiv.innerHTML = "⚠️ เกิดข้อผิดพลาดในการโหลดวิดีโอ";
+        console.error(e);
       }
     }
-  </script>  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('Service Worker ลงทะเบียนแล้ว'))
-        .catch(err => console.log('Service Worker ผิดพลาด:', err));
-    }
-  </script></body></html>
+  </script>
+</body>
+</html>
