@@ -1,136 +1,114 @@
-<!DOCTYPE html>...
-  <html lang="th"><head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ดาวน์โหลดวิดีโอ Facebook TikTok Instagram</title>
-  <link rel="manifest" href="/manifest.json" />
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #00b4d8, #90e0ef);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      color: #0077b6;
-    }.container {
-  background: rgba(255, 255, 255, 0.85);
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  text-align: center;
-  max-width: 500px;
-  width: 90%;
-}
-
-h1 {
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-input[type="text"] {
-  padding: 10px;
-  width: 80%;
-  border: 1px solid #0077b6;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-button {
-  padding: 10px 20px;
-  background-color: #0077b6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-button:hover {
-  background-color: #023e8a;
-}
-
-.download-link {
-  display: block;
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #0096c7;
-  color: white;
-  border-radius: 8px;
-  text-decoration: none;
-}
-
-.ads {
-  margin-top: 20px;
-  background-color: #caf0f8;
-  padding: 15px;
-  border-radius: 12px;
-}
-
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>ดาวน์โหลดวิดีโอ Facebook</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f0f8ff;
-      text-align: center;
-      padding: 40px;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px;
-      width: 80%;
-      max-width: 500px;
-    }
-    .link-container {
-      margin-top: 20px;
-    }
-    a {
-      display: block;
-      margin: 10px 0;
-      color: #0066cc;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ดาวน์โหลดวิดีโอ Facebook 4K 1080P 720P</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <meta name="theme-color" content="#00b4d8" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>🎥 ดาวน์โหลดวิดีโอ Facebook</h1>
-  <input type="text" id="videoUrl" placeholder="วางลิงก์วิดีโอ Facebook ที่นี่..." />
-  <br>
-  <button onclick="fetchVideo()">🔍 ดึงลิงก์ดาวน์โหลด</button>
+  <div class="container">
+    <h1>ดาวน์โหลดวิดีโอ Facebook</h1>
+    <input type="text" id="videoURL" placeholder="วางลิงก์ Facebook ที่นี่" />
+    <button onclick="fetchVideo()">ดึงวิดีโอ</button>
+    <div id="result"></div>
 
-  <div class="link-container" id="result"></div>
+    <div class="ads">พื้นที่โฆษณาของคุณ ✨</div>
+  </div>
 
+  <!-- โฆษณาวิดีโอ -->
+  <div class="video-ad-overlay" id="videoAd">
+    <video id="adVideo" controls autoplay>
+      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+      วิดีโอไม่สามารถเล่นได้
+    </video>
+    <button class="close-ad-btn" id="closeAdBtn" onclick="closeAd()" disabled>ข้ามโฆษณา (5)</button>
+  </div>
+
+  <!-- JS -->
   <script>
+    let selectedDownloadLink = "";
+    let countdown = 5;
+    let countdownInterval;
+
     async function fetchVideo() {
-      const url = document.getElementById("videoUrl").value.trim();
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = "⏳ กำลังดึงลิงก์...";
+      const url = document.getElementById("videoURL").value.trim();
+      const result = document.getElementById("result");
+      if (!url) {
+        result.innerHTML = "<p style='color:red;'>กรุณาวางลิงก์ก่อน</p>";
+        return;
+      }
+
+      result.innerHTML = "<p>กำลังดึงข้อมูลวิดีโอ...</p>";
 
       try {
-        const response = await fetch(`https://cors-anywhere.herokuapp.com/${url}`);
-        const html = await response.text();
+        const res = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
 
-        const hdMatch = html.match(/"playable_url_quality_hd":"([^"]+)"/);
-        const sdMatch = html.match(/"playable_url":"([^"]+)"/);
+        if (!data.formats || data.formats.length === 0) {
+          result.innerHTML = "<p style='color:red;'>ไม่พบวิดีโอ</p>";
+          return;
+        }
 
-        const hdUrl = hdMatch ? decodeURIComponent(hdMatch[1].replace(/\\u0025/g, '%').replace(/\\/g, '')) : null;
-        const sdUrl = sdMatch ? decodeURIComponent(sdMatch[1].replace(/\\u0025/g, '%').replace(/\\/g, '')) : null;
-
-        let output = "";
-        if (hdUrl) output += `<a href="${hdUrl}" target="_blank">📥 ดาวน์โหลดแบบ HD</a>`;
-        if (sdUrl) output += `<a href="${sdUrl}" target="_blank">📥 ดาวน์โหลดแบบ SD</a>`;
-        if (!hdUrl && !sdUrl) output = "❌ ไม่พบลิงก์วิดีโอ อาจเป็นวิดีโอส่วนตัวหรือระบบเปลี่ยนโครงสร้าง";
-
-        resultDiv.innerHTML = output;
-      } catch (e) {
-        resultDiv.innerHTML = "⚠️ เกิดข้อผิดพลาดในการโหลดวิดีโอ";
-        console.error(e);
+        result.innerHTML = "<h3>เลือกระดับความคมชัด:</h3>";
+        data.formats.forEach(format => {
+          const btn = document.createElement("a");
+          btn.href = "#";
+          btn.innerText = format.format_note || format.height + "p";
+          btn.className = "download-btn";
+          btn.onclick = () => showAd(format.url);
+          result.appendChild(btn);
+        });
+      } catch (err) {
+        console.error(err);
+        result.innerHTML = "<p style='color:red;'>เกิดข้อผิดพลาด: " + err.message + "</p>";
       }
+    }
+
+    function showAd(downloadLink) {
+      selectedDownloadLink = downloadLink;
+      document.getElementById("videoAd").style.display = "flex";
+      document.getElementById("adVideo").currentTime = 0;
+      document.getElementById("adVideo").play();
+
+      countdown = 5;
+      const closeAdBtn = document.getElementById("closeAdBtn");
+      closeAdBtn.innerText = `ข้ามโฆษณา (${countdown})`;
+      closeAdBtn.disabled = true;
+      closeAdBtn.classList.remove("enabled");
+
+      countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          closeAdBtn.innerText = `ข้ามโฆษณา (${countdown})`;
+        } else {
+          clearInterval(countdownInterval);
+          closeAdBtn.innerText = "ข้ามโฆษณา";
+          closeAdBtn.disabled = false;
+          closeAdBtn.classList.add("enabled");
+        }
+      }, 1000);
+    }
+
+    function closeAd() {
+      const closeAdBtn = document.getElementById("closeAdBtn");
+      if (closeAdBtn.disabled) return;
+      document.getElementById("videoAd").style.display = "none";
+      window.open(selectedDownloadLink, "_blank");
+    }
+
+    // Service Worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(reg => console.log("SW registered", reg))
+        .catch(err => console.error("SW registration failed", err));
     }
   </script>
 </body>
