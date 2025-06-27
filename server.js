@@ -9,10 +9,18 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.get('/api/getVideo', async (req, res) => { ... }) 
-  const videoUrl = req.query.url;
-  if (!videoUrl) {
-    return res.status(400).json({ error: 'Missing URL' });
+fetch('/api/video')
+  .then(async res => {
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return res.json();
+    } else {
+      const text = await res.text();
+      throw new Error('Unexpected response: ' + text);
+    }
+  })
+  .then(data => { /* ... */ })
+  .catch(err => console.error(err));
   }
 
   exec(`yt-dlp -J "${videoUrl}"`, (error, stdout, stderr) => {
