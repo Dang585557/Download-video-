@@ -3,19 +3,23 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
+// ฟังก์ชัน handler สำหรับ API
 export default async function handler(req, res) {
   const { url } = req.query;
 
+  // เช็คว่า url ถูกต้องหรือไม่
   if (!url || !url.includes('facebook.com')) {
     return res.status(400).json({ error: 'URL ไม่ถูกต้อง หรือไม่ใช่ลิงก์ Facebook' });
   }
 
   try {
+    // ใช้ yt-dlp ดึงข้อมูลวิดีโอ
     const command = `yt-dlp -j "${url}"`;
     const { stdout } = await execAsync(command, { timeout: 20000 });
 
     const json = JSON.parse(stdout);
 
+    // สร้าง array ของ formats ที่มีข้อมูล url และ format_note
     const formats = json.formats
       .filter(f => f.url && f.format_note)
       .map(f => ({
