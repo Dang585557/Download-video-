@@ -1,37 +1,32 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { Router } from 'express';
+import ytdlp from 'yt-dlp-exec';
 
-const execAsync = promisify(exec);
+const router = Router();
 
-// ฟังก์ชัน handler สำหรับ API
-export default async function handler(req, res) {
+router.get('/', async (req, res) => {
   const { url } = req.query;
-
-  // เช็คว่า url ถูกต้องหรือไม่
-  if (!url || !url.includes('facebook.com')) {
-    return res.status(400).json({ error: 'URL ไม่ถูกต้อง หรือไม่ใช่ลิงก์ Facebook' });
-  }
+  if (!url) return res.status(400).json({ error: 'URL is required' });
 
   try {
-    // ใช้ yt-dlp ดึงข้อมูลวิดีโอ
-    const command = `yt-dlp -j "${url}"`;
-    const { stdout } = await execAsync(command, { timeout: 20000 });
+    const output = await ytdlp(url, {
+      dumpSingleJson: true,
+      noCheckCertificates: true,
+      noWarnings: true,
+      preferFreeFormats: true,
+    });
 
-    const json = JSON.parse(stdout);
-
-    // สร้าง array ของ formats ที่มีข้อมูล url และ format_note
-    const formats = json.formats
-      .filter(f => f.url && f.format_note)
+    const formats = output.formats
+      .filter(f => f.ext === 'mp4' && f.acodec !== 'none' && f.vcodec !== 'none' && f.url)
       .map(f => ({
-        url: f.url,
-        quality: f.format_note,
-        ext: f.ext,
-        height: f.height
+        quality: f.format_note || f.height + 'p',
+        url: f.url
       }));
 
-    res.status(200).json({ formats });
+    res.json({ title: output.title, formats });
   } catch (err) {
-    console.error('เกิดข้อผิดพลาด:', err.message);
+    console.error(err);
     res.status(500).json({ error: 'ไม่สามารถดึงวิดีโอได้' });
   }
-}
+});
+
+export default router;
