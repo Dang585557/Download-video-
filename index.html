@@ -1,38 +1,46 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ดาวน์โหลดวิดีโอ Facebook</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <h1>ดาวน์โหลดวิดีโอ Facebook</h1>
-    <input id="url" type="text" placeholder="ใส่ลิงก์ Facebook ที่นี่">
+    <input type="text" id="videoURL" placeholder="วางลิงก์วิดีโอ Facebook ที่นี่" />
     <button onclick="fetchVideo()">ดึงวิดีโอ</button>
-    <div id="ad-section">
-      <p>🎯 โฆษณาของคุณอยู่ที่นี่ 🎯</p>
-    </div>
-    <div id="results"></div>
+    <div id="result"></div>
+    <div class="ads">พื้นที่โฆษณา ✨</div>
   </div>
 
   <script>
     async function fetchVideo() {
-      const url = document.getElementById("url").value;
-      const res = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
-      const data = await res.json();
+      const url = document.getElementById('videoURL').value.trim();
+      const result = document.getElementById('result');
+      result.innerHTML = 'กำลังโหลด...';
 
-      if (data.error) {
-        document.getElementById("results").innerHTML = `<p style="color:red;">เกิดข้อผิดพลาด: ${data.error}</p>`;
-      } else {
-        let html = '<h3>เลือกรูปแบบความละเอียด:</h3><ul>';
-        data.formats.forEach(v => {
-          html += `<li><a href="${v.url}" target="_blank">${v.format_note} (${v.ext})</a></li>`;
-        });
-        html += '</ul>';
-        document.getElementById("results").innerHTML = html;
+      try {
+        const res = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        result.innerHTML = `<h3>${data.title}</h3><p>เลือกระดับความคมชัด:</p>` +
+          data.formats.map(f =>
+            `<a href="${f.url}" target="_blank" class="download-btn">${f.quality}</a>`
+          ).join('');
+      } catch (err) {
+        result.innerHTML = `<p style="color:red;">เกิดข้อผิดพลาด: ${err.message}</p>`;
       }
+    }
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(() => {
+        console.log("SW registered");
+      });
     }
   </script>
 </body>
