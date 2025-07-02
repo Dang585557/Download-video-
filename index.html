@@ -1,46 +1,113 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ดาวน์โหลดวิดีโอ Facebook</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ดาวน์โหลดวิดีโอ</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #00b4d8, #90e0ef);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #0077b6;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 80%;
+      border: 1px solid #0077b6;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #0077b6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .download-btn {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      background-color: #0096c7;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      width: 80%;
+    }
+
+    .ads {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #caf0f8;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>ดาวน์โหลดวิดีโอ Facebook</h1>
-    <input type="text" id="videoURL" placeholder="วางลิงก์วิดีโอ Facebook ที่นี่" />
+    <h1>ดาวน์โหลดวิดีโอออนไลน์</h1>
+    <input type="text" id="videoURL" placeholder="วางลิงก์วิดีโอที่นี่">
+    <br>
     <button onclick="fetchVideo()">ดึงวิดีโอ</button>
     <div id="result"></div>
-    <div class="ads">พื้นที่โฆษณา ✨</div>
+    <div class="ads">
+      <p>พื้นที่โฆษณาของคุณ ✨</p>
+    </div>
   </div>
 
   <script>
+    const backendUrl = 'https://YOUR_BACKEND_URL/api/getVideo'; // ← เปลี่ยนเป็นลิงก์ Railway ของคุณ
+
     async function fetchVideo() {
       const url = document.getElementById('videoURL').value.trim();
       const result = document.getElementById('result');
-      result.innerHTML = 'กำลังโหลด...';
+      if (!url) {
+        result.innerHTML = '<p style="color:red;">กรุณาวางลิงก์ก่อน</p>';
+        return;
+      }
+
+      result.innerHTML = '<p>กำลังโหลด...</p>';
 
       try {
-        const res = await fetch(`/api/getVideo?url=${encodeURIComponent(url)}`);
+        const res = await fetch(`${backendUrl}?url=${encodeURIComponent(url)}`);
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
 
-        result.innerHTML = `<h3>${data.title}</h3><p>เลือกระดับความคมชัด:</p>` +
-          data.formats.map(f =>
-            `<a href="${f.url}" target="_blank" class="download-btn">${f.quality}</a>`
-          ).join('');
+        if (!data.formats || data.formats.length === 0) {
+          result.innerHTML = '<p style="color:red;">ไม่พบตัวเลือกวิดีโอ</p>';
+          return;
+        }
+
+        let html = '<h3>เลือกระดับความคมชัด:</h3>';
+        data.formats.forEach(f => {
+          if (f.ext === 'mp4' && f.url) {
+            html += `<a class="download-btn" href="${f.url}" target="_blank">${f.format_note || ''} - ${f.height || ''}p</a>`;
+          }
+        });
+        result.innerHTML = html;
+
       } catch (err) {
         result.innerHTML = `<p style="color:red;">เกิดข้อผิดพลาด: ${err.message}</p>`;
       }
-    }
-  </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').then(() => {
-        console.log("SW registered");
-      });
     }
   </script>
 </body>
